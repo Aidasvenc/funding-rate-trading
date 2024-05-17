@@ -1,0 +1,65 @@
+import numpy as np
+import scipy.stats as st
+import matplotlib.pyplot as plt
+import pandas as pd
+
+
+def Winsorize(data, alpha):
+    q = np.quantile(data, [alpha/2, 1-alpha/2])
+    W_data = data.copy()
+    for i in range(len(data)):
+        if W_data[i] < q[0]:
+            W_data[i] = q[0]
+        elif W_data[i] > q[1]:
+            W_data[i] = q[1]
+    return W_data
+
+
+def EDA(data):
+
+    alpha = 0.01
+    Win_data = Winsorize(data, alpha)
+    Kernel = st.gaussian_kde(Win_data)
+    min_Wdata = min(Win_data)
+    max_Wdata = max(Win_data)
+    x = np.linspace(min_Wdata, max_Wdata, len(Win_data))
+    y = Kernel(x)
+    plt.plot(x, y)
+    plt.vlines(np.mean(Win_data), ymin = 0, ymax = max(y) + 1, color = "g", linestyle = "--", label = "mean")
+    plt.legend(["Kernel density", "Average Mean"])
+    plt.show()
+    Win_data = np.reshape(Win_data, (len(Win_data), 1))
+    plt.boxplot(Win_data)
+    plt.show()
+    print([np.mean(data), np.std(data), st.skew(data)])
+    return
+
+
+
+path = "C:/Users/sebas/Desktop/Financial applications of blockchains and distributed ledgers/data_hold.csv"
+df = pd.read_csv(path)
+df = df.drop(labels = "Index", axis = 1)
+date_format='%d.%m.%y %H:%M'
+df["Open Time"] = pd.to_datetime(df["Open Time"], format = date_format)
+
+
+
+
+bear_periods = [("2020-02-12", "2020-03-16"), ("2021-09-11", "2022-11-21")]
+bull_periods = [("2020-03-16", "2020-07-27"), ("2022-11-21", "2024-03-07")]
+
+
+for start_date, end_date in bear_periods:
+    #period_df = df.loc[start_date:end_date]
+    period = (df['Open Time'] >= start_date) & (df['Open Time'] <= end_date)
+    period_df = df.loc[period]
+    fr = np.array(period_df["fundingRate"])
+    EDA(fr)
+    
+    
+for start_date, end_date in bull_periods:
+    #period_df = df.loc[start_date:end_date]
+    period = (df['Open Time'] >= start_date) & (df['Open Time'] <= end_date)
+    period_df = df.loc[period]
+    fr = np.array(period_df["fundingRate"])
+    EDA(fr)
