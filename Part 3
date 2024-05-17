@@ -17,7 +17,7 @@ def Winsorize(data, alpha):
 
 def EDA(data):
 
-    alpha = 0.01
+    alpha = 0.02
     Win_data = Winsorize(data, alpha)
     Kernel = st.gaussian_kde(Win_data)
     min_Wdata = min(Win_data)
